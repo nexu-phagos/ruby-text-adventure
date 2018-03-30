@@ -1,218 +1,259 @@
-$gold = 14
-$player_hp = 10
-$player_inventory = {}
-$shop_inventory = {'Shining Dagger of the Night' => 12, 'Mucky Tunic' => 2, 'Ancient Scarab Brooch' => 9}
-$cart_goblin = true
+require_relative 'enemy'
+require_relative 'item'
+require_relative 'player'
+require_relative 'room'
 
-# $shop_inventory.key 12  -- the name of the item that costs 12 gold
-# $shop_inventory.fetch 'Shining Dagger of the Night' -- the price of the dagger
-# puts $shop_inventory.keys[0] -- the first item in the list
-# puts $shop_inventory.values[0] -- the price of the first item in the list
+# TODO: Range of items. Range of enemies.
 
-def start(why_start)
-    puts "      **VILLAGE**"
-    puts why_start # this lets me present a custom opening line when the player returns to the first area
-    puts "You're in the middle of a silent town at night."
-    puts "You have #{$gold} gold in your pocket."
-    if $player_inventory.empty? == false
-      puts "You have the following items in your bag: "
-      $player_inventory.keys.each do |n| # iterates through the inventory array if there are items in it
-        puts "* #{n}\n"
+#--------------START-SETUP--------------#
+
+# MAKE A PLAYER, SET BASE VARIABLES
+
+## PLAYER STATS:
+
+unarmed = Item.new("Unarmed",:unarmed,0,0,0,0,:weapon)
+unarmored = Item.new("Unarmored",:unarmored,0,0,0,0,:armor)
+
+player = Player.new
+player.level = 1
+player.hp = 18
+player.gold = 0
+player.attack = 2
+player.defence = 1
+player.agility = 1
+player.inventory = []
+player.active_weapon = unarmed
+player.active_armor = unarmed
+player.exp = 0
+player.req_exp = 80
+
+## PLAYER POSITION:
+
+player.x_coords = 1
+player.y_coords = 1
+player.cursor_x_coords = 1
+player.cursor_y_coords = 1
+player.cursor = [player.cursor_x_coords,player.cursor_y_coords]
+
+
+
+# MAKE THE MAP, SET BASE VARIABLES
+
+$VALID_ROOMS = [[1,1], [1,2], [1,3], [2,1], [2,2], [2,3], [3,1], [3,2], [3,3], [4,1], [4,2], [4,3], [5,1], [5,2],
+[5,3], [6,1], [6,2], [6,3], [7,1], [7,2], [7,3], [6,4], [3,5], [3,6], [3,7], [4,5], [4,6], [4,7],
+[5,5], [5,6], [5,7], [6,5], [6,6], [6,7], [7,5], [7,6], [7,7]]
+
+# --
+  secret_cave_entrance = Room.new('Secret Cave',[1,1],'Secret Cave Entrance','at the entrance to the secret cave','looong desc')
+  stallactite_den = Room.new('Secret Cave',[1,2],'Stallactite Den','in a glossy passageway lined with stalagmites','')
+  glow_worm_nursery = Room.new('Secret Cave',[1,3],'Glow Worm Nursery','in a room full of glowing, wiggling lights','')
+  abandoned_goblin_drinking_den = Room.new('Secret Cave',[2,1],'Abandoned Goblin Drinking Den','in what looks like it used to be a common room','')
+  abandoned_goblin_quarters_east = Room.new('Secret Cave',[2,2],'Abandoned Goblin Quarters East','in the first half of the old goblin quarters','')
+  abandoned_goblin_quarters_west = Room.new('Secret Cave',[2,3],'Abandoned Goblin Quarters West','in the storage portion of the goblin quarters','')
+  charred_fire_room = Room.new('Secret Cave',[3,1],'Charred Fire Room','in a room with a large dead firepit in the center','')
+  caveshroom_garden = Room.new('Secret Cave',[3,2],'Caveshroom Garden','in the caveshroom garden','')
+  ethereal_pools = Room.new('Secret Cave',[3,3],'Ethereal Pools','in a carved-out room with an abyssal well','')
+  crumbling_arches_east = Room.new('Secret Cave',[4,1],'Crumbling Arches East','under the eastern portion of the arches','')
+  crumbling_arches_center = Room.new('Secret Cave',[4,2],'Crumbling Arches Center','under the central section of the arches','')
+  crumbling_archest_west = Room.new('Secret Cave',[4,3],'Crumbling Archest West','under the western portion of the arches','')
+  bright_glade_clearing = Room.new('Remote Glade',[5,1],'Bright Glade Clearing','in a luminescent forest clearing','')
+  fallen_pine_root = Room.new('Remote Glade',[5,2],'Fallen Pine Root','next to the root end of a fallen pine tree','')
+  fallen_pine_branches = Room.new('Remote Glade',[5,3],'Fallen Pine Branches','near the tip of the fallen pine','')
+  ancient_hut = Room.new('Remote Glade',[6,1],'Ancient Hut','outside a patchy wooden hut','')
+  mystic_pit = Room.new('Remote Glade',[6,2],'Mystic Pit','near a faintly glowing pit','')
+  chalky_patch = Room.new('Remote Glade',[6,3],'Chalky Patch','on a well-worn patch of chalky ground','')
+  overgrown_weed_patch = Room.new('Remote Glade',[7,1],'Overgrown Weed Patch','on an overgrown patch of land behind the hut','')
+  collapsed_lair = Room.new('Remote Glade',[7,2],'Collapsed Lair','next to a caved-in entranceway','')
+  waterfall_edge = Room.new('Remote Glade',[7,3],'Waterfall Edge','facing the river','')
+  sandstone_bridge = Room.new('Bridge',[6,4],'Sandstone Bridge','on a sturdy bridge of light brown rock','')
+  sandy_scrubland = Room.new('Corrupted Wilds',[3,5],'Sandy Scrubland','at a rocky outcrop, dotted with scrub','')
+  heather_patch = Room.new('Corrupted Wilds',[3,6],'Heather Patch','amidst purple heathers','')
+  ridgeside_south = Room.new('Corrupted Wilds',[3,7],'Ridgeside South','at the south corner of the ridgeway','')
+  carved_pines = Room.new('Corrupted Wilds',[4,5],'Carved Pines','near a collection of carved pines which face the river','')
+  scarred_redwood = Room.new('Corrupted Wilds',[4,6],'Scarred Redwood','under a windscarred redwood tree','')
+  ridgeside_post = Room.new('Corrupted Wilds',[4,7],'Ridgeside Post','underneath a makeshift watch post build into the ridgeside','')
+  pebble_stacks = Room.new('Corrupted Wilds',[5,5],'Pebble Stacks','near a sandy riverside clearing','')
+  goblin_fort_ruins_south = Room.new('Corrupted Wilds',[5,6],'Goblin Fort Ruins South','in the south end of a ruined goblin fort','')
+  ridgeside_etchings = Room.new('Corrupted Wilds',[5,7],'Ridgeside Etchings','near a patch of etchings in the ridgeside','')
+  bridge_signpost = Room.new('Corrupted Wilds',[6,5],'Bridge Signpost','next to a gnarled signpost near the bridge','')
+  goblin_fort_ruins_north = Room.new('Corrupted Wilds',[6,6],'Goblin Fort Ruins North','in the north end of the goblin fort','')
+  ridgeside_north = Room.new('Corrupted Wilds',[6,7],'Ridgeside North','at the north side of ridgeside','')
+  waterfall_underpass = Room.new('Corrupted Wilds',[7,5],'Waterfall Underpass','near a nook in the cliiff','')
+  bleached_clearing = Room.new('Corrupted Wilds',[7,6],'Bleached Clearing','in a brightly lit clearing','')
+  fractured_cliff = Room.new('Corrupted Wilds',[7,7],'Fractured Cliff','facing a wide crack in the cliff','')
+# --
+
+## POPULATE ROOMS WITH LOOT AT RANDOM
+
+ObjectSpace.each_object(Room) do |room|
+  room.room_gold = 0
+  room.generate_room_loot
+  room.items = []
+end
+
+## MAKE NAMED ITEMS (name,id,attack,defence,agility,type)
+
+dagger = Item.new("Dagger",:dagger,2,0,1,5,:weapon)
+sword = Item.new("Sword",:sword,3,0,-1,7,:weapon)
+tunic = Item.new("Tunic",:tunic,0,2,0,3,:armor)
+wand = Item.new("Wand",:wand,2,-2,1,10,:weapon)
+wand.quip = "Bzzt!"
+rusty_dagger = Item.new("Rusty Dagger",:rusty_dagger,1,0,1,2,:weapon)
+rusty_dagger.quip = "Slick with goblin sweat."
+potion = Item.new("Health Potion",:health_potion,0,0,0,5,:potion)
+potion.restore_hp = 8
+player.inventory.push(potion)
+player.inventory.push(potion)
+player.inventory.push(potion)
+
+ObjectSpace.each_object(Room) do |room|
+  d15 = rand(1..15)
+  if d15 == 15
+    room.items.push(wand)
+    break
+  end
+end
+
+## ADD NAMED ITEMS TO ROOMS
+
+secret_cave_entrance.items.push(wand)
+goblin_fort_ruins_south.items.push(sword)
+secret_cave_entrance.items.push(tunic)
+
+player.active_armor = tunic
+player.active_weapon = dagger
+
+## MAKE ENEMIES
+##################(hp,level, attack, defence,agility, gold, inventory,active_weapon,name,location,id)
+gobbo1a = Enemy.new(3,2,1,1,1,2,[rusty_dagger],rusty_dagger,"Weak Goblin",[1,1],:goblin1)
+gobbo1b = Enemy.new(4,1,1,1,1,2,[rusty_dagger],rusty_dagger,"Weak Goblin",$VALID_ROOMS.sample,:goblin1)
+gobbo1c = Enemy.new(4,1,1,1,1,2,[rusty_dagger,potion],rusty_dagger,"Weak Goblin",$VALID_ROOMS.sample,:goblin1)
+gobbo1d = Enemy.new(4,1,1,1,1,2,[rusty_dagger],rusty_dagger,"Weak Goblin",$VALID_ROOMS.sample,:goblin1)
+gobbo1e = Enemy.new(4,1,1,1,1,2,[wand],wand,"Weak Goblin",$VALID_ROOMS.sample,:goblin1)
+gobbo2a = Enemy.new(4,2,1,1,1,6,[rusty_dagger,potion],rusty_dagger,"Scraggly Goblin",$VALID_ROOMS.sample,:goblin2)
+gobbo2b = Enemy.new(4,2,1,1,1,6,[rusty_dagger],rusty_dagger,"Scraggly Goblin",$VALID_ROOMS.sample,:goblin2)
+gobbo3 = Enemy.new(4,3,1,1,1,3,[rusty_dagger],rusty_dagger,"Sly Goblin",$VALID_ROOMS.sample,:goblin3)
+gobbo4 = Enemy.new(4,5,2,1,1,3,[rusty_dagger],rusty_dagger,"Tough Goblin",$VALID_ROOMS.sample,:goblin4)
+gobbo5 = Enemy.new(4,7,2,1,1,3,[rusty_dagger,potion,potion],rusty_dagger,"Goblin Enforcer",$VALID_ROOMS.sample,:goblin5) # (hp, attack, defence, gold, inventory,name,id)
+
+#--------------END-SETUP--------------#
+
+## CORE GAME METHODS
+
+def get_room_info(player)
+  ObjectSpace.each_object(Room) do |room|
+    if room.coords == player.current_room
+      puts "### #{room.title} ###".upcase
+      puts "You are #{room.short_desc}."
+    end
+  end
+    ObjectSpace.each_object(Enemy) do |enemy|
+      if player.current_room == enemy.location
+        puts "There's a #{enemy.name} lurking here."
+      end
+  end
+end
+
+def get_room_details(player)
+  ObjectSpace.each_object(Room) do |room|
+    if room.coords == player.current_room
+      puts room.long_desc
+      sleep(1)
+      if room.room_gold > 0
+        puts "There's #{room.room_gold} gold here."
+      end
+      if room.items.empty? == false
+        puts "The room contains:"
+        room.items.each do |item|
+        puts "* #{item.name}"
       end
     end
-
-    puts "There's a faint light glowing in the window of the shop."
-    puts "Through the village, the road dissolves into a dirt track and leads to a distant forest."
-    puts "Where do you go?"
-    print "> "
-    choice = $stdin.gets.chomp # gets user input
-
-    if choice.include? "shop"
-      puts "You enter the village shop."
-      puts "An old man is squinting at a tattered tome behind the counter."
-      shop # go to the shop
-    elsif choice.include? "forest" || "track"
-      "You leave the village, the road getting slowly bumpier."
-      path # go to the path
-    else
-      dead("You died of boredom.")
+  end
   end
 end
 
-def shop
-  puts "      **VILLAGE SHOP**"
-  puts "Would you like to see what's for sale?"
-  print "> "
-  choice = $stdin.gets.chomp
-  if choice.include? "y" || "yes"
-    shop_list # list the shop items
-  else
-    start("You step out of the shop, into the darkness...") # go back to the village
-  end
-end
-
-def shop_list
-
-  i=0 # initialize the counter for the shop item list
-  $shop_inventory.keys.each do |n|
-    i=i+1
-    puts "#{i}: #{n}" # iteratively lists out the shop items
-  end
-
-  puts "Buy which item?"
-  print "> "
-  choice = $stdin.gets.chomp # gets choice
-  choice = choice.to_i-1 # this has a bug that selects the last item if input is unknown
-
-  if $shop_inventory.values[choice].to_i <= $gold # check if the player can afford the item
-    buy_prompt(choice) # runs buy_prompt, passing the item selection
-  else
-    puts "You can't afford that... It costs #{$shop_inventory.values[choice]} gold and you only have #{$gold}."
-    shop
-  end
-end
-
-def buy_prompt(choice) #  choice = choice.to_i-1 # maps the item selection to the hash
-  puts $shop_inventory.keys[choice] + " is " + $shop_inventory.values[choice].to_s + " gold." # "[chosen item] is [X] gold"
-  puts "Buy it?"
-  print "> "
-  buy_choice = $stdin.gets.chomp
-  if buy_choice.include? "y" || "yes"
-    $player_inventory.store($shop_inventory.keys[choice],$shop_inventory.values[choice]) # add the chosen hash item to player_inventory
-    puts $shop_inventory.keys[choice] + " was added to your inventory."
-    $gold-=$shop_inventory.values[choice] # bill the player the item cost
-    $shop_inventory.delete($shop_inventory.keys[choice]) # delete the item from the shop
-    puts "You have #{$gold} gold remaining."
-  else
-    shop
-  end
-    if $shop_inventory.empty? # kicks players out of the shop if it has nothing to sell
-    start("SOLD OUT! You leave the shop.")
+def get_fight(player)
+  ObjectSpace.each_object(Enemy) do |enemy|
+    if enemy.location == player.current_room
+      combat(player,enemy)
     end
-    puts "Buy another item?"
-    print "> "
-    next_choice = $stdin.gets.chomp
-    if next_choice.include? "y" || "yes"
-      shop_list
-    else
-      start("You leave the shop...")
   end
 end
 
-def path # this method is nice and clean, the others could do with being as tidy
-  puts "      **DIRT PATH**"
-  puts "You're heading down the dirt track. You see the moonlit forest ahead."
-  puts "A track leads off to your left through a gap in the thicket."
-  puts "Go through the gap, to the forest, or back to the village?"
-  print "> "
-  choice = $stdin.gets.chomp
-  if choice.include? "gap"
-    gap
-  elsif choice.include? "forest"
-    forest
+def get_exp(exp,player)
+  next_level = player.level + 1
+  player.exp+=exp
+  unless player.exp < player.next_level
+    player.level_up
+  end
+end
+
+def combat(player,enemy) # a very simple combat engine for now
+  while player.alive? # end when either is dead. TODO: add a real death method
+  player.swing(enemy)
+  sleep(1)
+  break unless enemy.alive?
+  enemy.swing(player)
+  sleep(1)
+  end
+  if player.alive? == true
+    puts "The #{enemy.name} is dead."
+    enemy.location = [0,0]
+    player.gold+=enemy.gold
+    puts "You get #{enemy.gold} gold from its corpse."
+    enemy.inventory.each do |item|
+    player.inventory.push(item)
+    puts "You loot #{item.name}"
+  end
+  puts "You get #{enemy.exp_drop} EXP"
+  get_exp(enemy.exp_drop,player)
   else
-    start("You head back down the road towards the village.")
+    player.dead("The #{enemy.name} killed you.")
   end
 end
 
-def gap
-  puts "      **SUSPICIOUS GAP**"
-  puts "You silently slip through the gap."
-  sleep(1)
-  if $cart_goblin == true # check the goblin hasn't been killed already
-  puts "You see torchlight."
-  puts "A hunched goblin is rummaging through a cart. He didn't seem to hear you."
-  puts "Do you go closer, or go back through the gap?"
-  print "> "
-  choice = $stdin.gets.chomp
-  if choice.include? "back" || "gap"
-    path
-  else
-    cart
-  end # jump here if the goblin is dead
-    puts "You see the abandoned cart and the goblin's body. There's no way forward."
-    path
-  end
+## TESTS GO HERE
+=begin
+while true
+get_exp(100,player)
+player.status
+sleep(1)
 end
+=end
+## CORE GAME LOOP
 
-def cart
-  puts "You approach the cart."
-  d20 = rand(1..20) # check sneakiness. this should be modified by an attribute in my next iteration.
-  puts "Let's see how sneaky you are..."
-  sleep(1)
-  puts "You roll #{d20}."
-  sleep(1)
-  puts "..."
-  sleep(1)
-  if d20 > 14 # sneakiness test passed
-    puts "You sneak up on the goblin..."
-    sleep(1)
-      goblin_attack_sneak
-  else # sneakiness test failed
-    puts "You alerted the goblin! Defend yourself!"
-    sleep(1)
-    goblin_attack_backfoot
-  end
+get_room_info(player)
+while true
+print "> "
+choice = gets.chomp
+case choice
+when /north/
+  player.move_north
+  get_room_info(player)
+when /south/
+  player.move_south
+  get_room_info(player)
+when /east/
+  player.move_east
+  get_room_info(player)
+when /west/
+  player.move_west
+  get_room_info(player)
+when /get gold/
+  player.get_gold(player.current_room)
+when /get/
+  player.get(choice,player.current_room)
+when /inventory/
+  player.list_inventory
+when /equip/
+  player.equip(choice)
+when /use/
+  player.use(choice)
+when /status/
+  player.status
+when /look/
+  get_room_details(player)
+when /fight/
+  get_fight(player)
 end
-
-def goblin_attack_sneak
-  if $player_inventory.has_key? "Shining Dagger of the Night" # go here if player is armed
-    puts "You slit the goblin's throat."
-  else # go here if player is unarmed
-    puts "You swiftly snap it's neck without it ever knowing you were there."
-  gold_loot = rand(2..5)
-  puts "You find #{gold_loot} gold coins in the purse."
-  $gold = $gold + gold_loot # add the looted gold to player's stash
-  puts "It doesn't look like there's anything left to take. You head back to the path."
-  $cart_goblin = false # goblin is classed as dead now
-  path
-  end
 end
-
-def goblin_attack_backfoot
-   if !$player_inventory.has_key? "Mucky Tunic" # check if the player has armor
-     damage_string_end = " -- should've worn some kind of armor"
-     damage = rand(2..4) # deal d4 damage to unarmored player
-  else
-     damage = rand(1..2) # deal d2 damage to armored player
-  end
-  if $player_inventory.has_key? "Shining Dagger of the Night" # check if the player is armed
-    attack_string_end = "stabbing it lethally with your shining dagger."
-  else
-    attack_string_end = "snapping its neck with your bare hands. Arm yourself next time..."
-  end
-  puts "The goblin slices you for #{damage}#{damage_string_end}."
-  $player_hp = $player_hp - damage # take damage!
-  sleep(1)
-  puts "You have #{$player_hp} health remaining"
-  sleep(1)
-  puts "You hit back at the goblin, #{attack_string_end}."
-  $cart_goblin = false # sets the goblin as permanently dead
-  sleep(1)
-  gold_loot = rand(2..5)
-  puts "You find #{gold_loot} gold coins in the purse"
-  $gold = $gold + gold_loot # add loot to player stash
-  sleep(1)
-  box_loot = rand(1..2) # 50/50 chance of looting a cupcake from the cart
-  if box_loot == 1
-    puts "You found an iced cupcake in the cart. You bundle it into your dusty bag."
-    $player_inventory.store("Dusty iced cupcake",1) # add the item to inventory hash with gold value 1
-  end
-  sleep(1)
-    puts "It doesn't look like there's anything left to take. You head back to the path."
-    sleep(1)
-    path
-end
-
-def forest # TBC!
-  puts 'A ghostly voice echoes: "OooOoo...Unfortunately, I haven\'t built this part of the game yet...'
-  sleep(3)
-  path
-end
-
-def dead(why_dead)
-  puts why_dead
-  exit(0)
-end
-
-start("You're beginning your journey...")
