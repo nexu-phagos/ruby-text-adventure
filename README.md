@@ -1,5 +1,6 @@
 # ruby-text-adventure
 
-A learning project.
+A collaborative learning project.
 
-Progress being posted daily at: http://benjbrandall.xyz/category/ruby/
+Forked from Benjamin Brandall's original code.
+# https://github.com/benjbrandall/ruby-text-adventure
